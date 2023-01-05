@@ -37,6 +37,16 @@ years <- 3
 
 dt <- seq(0, 365 *years, 1)
 
+R01 = 2 ## R0 is beta*N/gamma 
+R02 = 2 ## R0 is beta*N/gamma
+
+## use params from kissler et al. 
+params <- c(sigma = 1/3, ## 1/latent period 
+            nu = 1/5, ## 1/infectious period
+            beta1 = R01/(5*N1), ## per contact probability of transmission
+            beta2 = R02/(5*N2)
+)
+
 ##########################################
 ## Function for two populations 
 ##########################################
@@ -79,7 +89,12 @@ pct2 <- N2 * (1/1000)
 for(v in v_list){
   for(pv1 in pv_list){
     
-    #Need to account for one I in each population
+    #Following the run
+    print(paste("v =",v, 
+                "pv =",pv1, 
+                sep =""))
+    
+    #Need to account for I in each population
     N1 = N1 - pct
     N2 = N2 - pct2
     
@@ -127,7 +142,7 @@ for(v in v_list){
       R2 = 0
     }
     
-    # Set E, I and C as they're always the same (0, 1 and 1 respectively)
+    # Set E, I and C as they're always the same 
     # (doing it here and not in the if loops works much better)
     E1 = 0
     I1 = pct
@@ -136,7 +151,7 @@ for(v in v_list){
     I2 = pct2
     C2 = pct2
     
-    # Bring back N1 to it's actual total size now that we have one individual infected (I)
+    # Bring back N1 and N2 to their actual total size now that we have some individual infected (I)
     N1 <- N1+pct
     N2 <- N2+pct2
     
@@ -171,7 +186,6 @@ for(v in v_list){
   }
 }
 
-
 ######################################
 ## Subset data 
 ######################################
@@ -181,7 +195,7 @@ unequal %>%
   mutate(vtau = v*(1-tau),
          vtot = V1 + V2) -> unequal
 
-save(unequal, file = "prophylactic_scenarios/data/unequalsize.RData")
+#save(unequal, file = "prophylactic_scenarios/data/unequalsize.RData")
 
 ### Load data
 load("prophylactic_scenarios/data/unequalsize.RData")
@@ -197,27 +211,27 @@ data_top <- unequal.sub %>%
   mutate(pop1_doses = pv * v) %>%
   mutate(pop2_doses = v - pop1_doses) %>%
   group_by(v) %>%
-  slice(which.min(C1C2))
+  slice(which.min(C1C2)) 
 
 data_bottom <- unequal.sub %>%
   filter(v %in% c(200000, 
                   600000, 
                   800000, 
-                  1000000,  
-                  1400000)) 
+                  1200000,  
+                  1600000)) 
 
 ### Labels for figure 
 labs <- c("Regime 1\n(200000 doses)", 
           "Regime 2\n(600000 doses)", 
           "Regime 3\n(800000 doses)",
-          "Regime 4\n(1000000 doses)", 
-          "Regime 5\n(1400000 doses)")
+          "Regime 4\n(1200000 doses)", 
+          "Regime 5\n(1600000 doses)")
 
 names(labs) <- c(200000, 
                  600000, 
                  800000, 
-                 1000000,  
-                 1400000)
+                 1200000,  
+                 1600000)
 labs
 
 ############################
@@ -232,11 +246,11 @@ plot_top <- ggplot(data_top,
                    mapping = aes(x = v)) +
   geom_line(aes(y = pop1_doses, color = "Population 1 (size 1000000)"), size = 1.3) +
   geom_line(aes(y = pop2_doses, color = "Population 2 (size 2000000)"), size = 1.3) +
-  geom_vline(xintercept= c(455000, 777500, 887500, 1225000), linetype="dotted", colour = "gray32") +
+  geom_vline(xintercept= c(515000, 757500, 1030000, 1360000), linetype="dotted", colour = "gray32") +
   geom_text(x=227500, y=1100000, label="1", color="gray32", size = 4) +
-  geom_text(x=616250, y=1100000, label="2", color="gray32", size = 4) +
-  geom_text(x=832500, y=1100000, label="3", color="gray32", size = 4) +
-  geom_text(x=1056250, y=1100000, label="4", color="gray32", size = 4) +
+  geom_text(x=636250, y=1100000, label="2", color="gray32", size = 4) +
+  geom_text(x=893750, y=1100000, label="3", color="gray32", size = 4) +
+  geom_text(x=1195000, y=1100000, label="4", color="gray32", size = 4) +
   geom_text(x=1500000, y=1100000, label="5", color="gray32", size = 4) +
   labs(#title = "Remaking Keeling/Duijzer plot",
     x = "Total number of vaccine doses",
@@ -298,8 +312,8 @@ plot_bottom <- ggplot(data = data_bottom, aes(x = pv, y = C1C2, color = pv)) +
   geom_point(data = data.frame(x = min_point$pv[1], y = min_point$C1C2[1], v = 200000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
   geom_point(data = data.frame(x = min_point$pv[2], y = min_point$C1C2[2], v = 600000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
   geom_point(data = data.frame(x = min_point$pv[3], y = min_point$C1C2[3], v = 800000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[4], y = min_point$C1C2[4], v = 1000000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[5], y = min_point$C1C2[5], v = 1400000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
+  geom_point(data = data.frame(x = min_point$pv[4], y = min_point$C1C2[4], v = 1200000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
+  geom_point(data = data.frame(x = min_point$pv[5], y = min_point$C1C2[5], v = 1600000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
   geom_vline(xintercept = ratio, linetype = "dashed", color = "grey")
 plot_bottom
 

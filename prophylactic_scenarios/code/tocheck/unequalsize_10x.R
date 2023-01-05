@@ -29,13 +29,13 @@ options(scipen = 999)
 ## Parameters 
 ##########################################
 # Figure 2 example is with two populations of size 1e6 and 2e6.
-N1 <- 1e6
-N2 <- 10e6
-pv1 <- 0.5 
-ve <- 0.95
-tau <- 1-ve
-phi1 <- 0
-phi2 <- 0 
+N1 <- 1e6 ## population 1 size
+N2 <- 10e6 ## population 2 10 times size of population 1
+ve <- 0.95 ## vaccine efficacy
+tau <- 1-ve ## failure rate 
+phi1 <- 0 ## underlying immunity population 1
+phi2 <- 0 ## underlying immunity population 2 
+years <- 3
 
 dt <- seq(0, 365, 1)
 
@@ -83,15 +83,12 @@ SEIR.twopop.nb <- function(t, x, params){
 ## Make Run
 ##########################################
 
-twopop2.2 <- data.frame()
+unequal10 <- data.frame()
 
 v_list <- seq(0, 10e6, 2500) # seq(0, 2e6, 2500)
 pv_list <- seq(0, 1, 0.01)
-
-#easy check 
-#v_list <- 11000
-#pv_list <- 0.2
-
+pct <- N1 * (1/1000)
+pct2 <- N2 * (1/1000)
 
 for(v in v_list){
   for(pv1 in pv_list){
@@ -102,9 +99,9 @@ for(v in v_list){
                 "pv =",pv1, 
                 sep =""))
     
-    #Need to account for one I in each population
-    N1 = N1 - 1
-    N2 = N2 - 1
+    #Need to account for I in each population
+    N1 = N1 - pct
+    N2 = N2 - pct2
     
     # Only allow v to be up to total population size (N1+N2)
     # we can't vaccinate more than the total population size (in both pops)
@@ -150,18 +147,18 @@ for(v in v_list){
       R2 = 0
     }
     
-    # Set E, I and C as they're always the same (0, 1 and 1 respectively)
+    # Set E, I and C as they're always the same 
     # (doing it here and not in the if loops works much better)
     E1 = 0
-    I1 = 1
-    C1 = 1
+    I1 = pct
+    C1 = pct
     E2 = 0
-    I2 = 1
-    C2 = 1
+    I2 = pct2
+    C2 = pct2
     
-    # Bring back N1 to it's actual total size now that we have one individual infected (I)
-    N1 <- N1+1
-    N2 <- N2+1
+    # Bring back N1 and N2 to their actual total size now that we have some individual infected (I)
+    N1 <- N1+pct
+    N2 <- N2+pct2
     
     # Set the initial conditions
     inits <- c(
@@ -183,15 +180,16 @@ for(v in v_list){
                      times = dt,
                      func = SEIR.twopop.nb,
                      parms = params)
-    out2.df <- data.frame(output2)[366,]
+    out2.df <- data.frame(output2)[length(dt),]
+#    out2.df <- data.frame(output2)[366,]
     out2.df$pv = pv1
     out2.df$v = v
     out2.df$phi1 = phi1
     out2.df$phi2 = phi2
     out2.df$left_for_v1 = left_for_v1
     out2.df$left_for_v2 = left_for_v2
-    twopop2.2 = rbind(twopop2.2,out2.df)
-  #}
+    unequal10 = rbind(unequal10,out2.df)
+    #}
   }
 }
 
