@@ -252,8 +252,7 @@ plot_top <- ggplot(data_top,
   geom_text(x=893750, y=1100000, label="3", color="gray32", size = 4) +
   geom_text(x=1195000, y=1100000, label="4", color="gray32", size = 4) +
   geom_text(x=1500000, y=1100000, label="5", color="gray32", size = 4) +
-  labs(#title = "Remaking Keeling/Duijzer plot",
-    x = "Total number of vaccine doses",
+  labs(x = "Total number of vaccine doses",
     y = "Optimal vaccine allocation across \n populations 1 and 2") +
   theme_bw() + 
   theme(legend.title = element_blank(), 
@@ -275,8 +274,8 @@ plot_top <- ggplot(data_top,
   # scale_x_continuous(breaks = seq(0, 2e6, 4e5), labels = seq(0, 2e6, 4e5)) +
   scale_x_continuous(breaks = seq(0, 2e6, 2e5), labels = seq(0, 2e6, 2e5)) +
   scale_color_manual(values = c("Population 1 (size 1000000)" = my_col[3], "Population 2 (size 2000000)" = my_col[1])) +
-  geom_text(x = 250000, y=40000, label="population 2", size = 3, color="#B2182B") +
-  geom_text(x = 220000, y=270000, label="population 1", size = 3, color="#4393C3", angle = 30)
+  geom_text(x = 250000, y=44000, label="population 2", size = 3, color="#B2182B") +
+  geom_text(x = 220000, y=270000, label="population 1", size = 3, color="#4393C3", angle = 31)
 plot_top
 
 plot_top_legend <- get_legend(plot_top)

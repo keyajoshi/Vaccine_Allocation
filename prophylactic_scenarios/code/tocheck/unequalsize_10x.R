@@ -193,215 +193,90 @@ for(v in v_list){
   }
 }
 
+######################################
+## Creating Figure S2 with pop 2 10 times as large as pop 1
+######################################
 
 ######################################
-## Creating Figure 2 plot pop 2 2 times as large
+## Subset data 
 ######################################
-
 ### Check df
-
-twopop2.2 %>%
+unequal10 %>%
   mutate(vtau = v*(1-tau),
-         vtot = V1 + V2) -> twopop2.2
+         vtot = V1 + V2) -> unequal10
 
-#save(twopop2.2, file = "unequalallocation_20200528.RData")
-#save(twopop2.2, file = "unequalallocation_pop1-1_pop2-2_20221116.RData")
-#save(twopop2.2, file = "unequalallocation_pop1-1_pop2-10_20221116.RData")
+#save(unequal10, file = "prophylactic_scenarios/data/unequalsize10.RData")
 
 ### Load data
-#load("unequalallocation_20200528.RData")
-load("unequalallocation_pop1-1_pop2-2_20221116.RData")
-#load("unequalallocation_pop1-1_pop2-10_20221116.RData")
+load("prophylactic_scenarios/data/unequalsize10.RData")
 
 ### Subset data 
-twopop <- twopop2.2 %>% 
-  filter(time == max(time)) %>% 
-  mutate(C1C2 = C1 + C2) %>%
-  select(C1C2, pv, v, C1, C2) # %>% 
-#  filter(phi1 == 0)
-
-data_top <- twopop %>%
-  filter(v < 1.8e6) %>%
-  mutate(pop1_doses = pv * v) %>%
-  mutate(pop2_doses = v - pop1_doses) %>%
-  group_by(v) %>%
-  slice(which.min(C1C2))
-
-data_bottom <- twopop %>%
-  filter(v %in% c(200000, 600000, 800000, 1000000,  1400000)) #c(2e5, 6e5, 8e5, 10e5, 14e5))
-# filter(v %in% c(1e5, 3e5, 5e5, 7e5, 9e5 ))
-# filter(v == 2100| v == 3500 | v == 4160 | v == 4500 | v == 6000)
-
-### Labs
-labs <- c("Regime 1\n(200000 doses)", "Regime 2\n(600000 doses)", "Regime 3\n(800000 doses)",
-          "Regime 4\n(1000000 doses)", "Regime 5\n(1400000 doses)")
-#names(labs) <- c("2100", "3500", "4160", "4500", "6000")
-names(labs) <- c(200000, 600000, 800000, 1000000,  1400000)
-labs
-
-### Define my colors
-my_col <- c("#B2182B", "grey65", "#4393C3")
-
-### Top half of Figure 2
-options(scipen = 99999)
-plot_top <- ggplot(data_top, mapping = aes(x = v)) +
-  geom_line(aes(y = pop1_doses, color = "Population 1 (size 1000000)"), size = 1.3) +
-  geom_line(aes(y = pop2_doses, color = "Population 2 (size 2000000)"), size = 1.3) +
-  geom_vline(xintercept= c(455000, 777500, 887500, 1225000), linetype="dotted", colour = "gray32") +
-  geom_text(x=227500, y=1100000, label="1", color="gray32", size = 4) +
- # geom_text(x=227500, y=900000, label="pop 1 < pop 2", color="gray32", size = 4) +
-  geom_text(x=616250, y=1100000, label="2", color="gray32", size = 4) +
-  geom_text(x=832500, y=1100000, label="3", color="gray32", size = 4) +
-  geom_text(x=1056250, y=1100000, label="4", color="gray32", size = 4) +
-  geom_text(x=1500000, y=1100000, label="5", color="gray32", size = 4) +
-  labs(#title = "Remaking Keeling/Duijzer plot",
-    x = "Total number of vaccine doses",
-    y = "Optimal vaccine allocation across \n populations 1 and 2") +
-  theme_bw() + 
-  theme(legend.title = element_blank(), 
-        legend.position = 'bottom',
-        #legend.spacing.x = unit(0.3, "cm"), 
-       # panel.grid.major = element_blank(), 
-      #  panel.grid.minor = element_blank(),
-       # axis.text.x = element_blank(),
-       # axis.ticks.x = element_blank(), 
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.text.x = element_text(size = 10),
-        axis.text.y = element_text(size = 10),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12)) +
-      #  legend.title = element_text(size = 10)) +
-  coord_cartesian(ylim = c(0,1.2e6), clip = "off") +
-  scale_y_continuous(breaks = seq(0, 1.2e6, 2e5), labels = seq(0, 1.2e6, 2e5)) +
-# scale_x_continuous(breaks = seq(0, 2e6, 4e5), labels = seq(0, 2e6, 4e5)) +
-  scale_x_continuous(breaks = seq(0, 2e6, 2e5), labels = seq(0, 2e6, 2e5)) +
-  scale_color_manual(values = c("Population 1 (size 1000000)" = my_col[3], "Population 2 (size 2000000)" = my_col[1])) +
-  geom_text(x = 250000, y=43500, label="population 2", size = 3, color="#B2182B") +
-  geom_text(x = 220000, y=270000, label="population 1", size = 3, color="#4393C3", angle = 31)
-plot_top
-
-plot_top_legend <- get_legend(plot_top)
-
-### Create df for plotting the minimal points
-min_point <- data_bottom %>%
-  group_by(v) %>%
-  slice(which.min(C1C2)) %>%
-  select(pv, v, C1C2) 
-min_point <- as.data.frame(min_point)
-min_point
-
-### Bottom half of Figure 2
-N1 <- 1e6
-N2 <- 2e6
-ratio <- N1/(N1+N2)
-plot_bottom <- ggplot(data = data_bottom, aes(x = pv, y = C1C2, color = pv)) +
-  geom_line(size = 2) +
-  facet_wrap(~v, ncol = 5, labeller = labeller(v = labs)) + 
-  theme_bw() +
-  scale_color_gradientn(colours = my_col) + 
-  labs(#title = "Title",
-    x = "Proportion of vaccine doses given to population 1",
-    y = "Cumulative number of cases in \n populations 1 and 2") +
-  theme(legend.position = "none") +
-  #scale_x_continuous(labels = scales::number_format(accuracy = 0.1)) +
-#  scale_x_continuous(labels = c(0, 0.2, 0.4, 0.8, 1)) +
-  scale_x_continuous(labels = c(0, 0.25, 0.5, 0.75, 1)) + # c(0, 0.2, 0.4, 0.8, 1))
-  theme(#panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank()) +
-  #geom_point(data = min_point, aes(x = pv[1], y = C1C2[1]), color = "black", inherit.aes=FALSE)
-  geom_point(data = data.frame(x = min_point$pv[1], y = min_point$C1C2[1], v = 200000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[2], y = min_point$C1C2[2], v = 600000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[3], y = min_point$C1C2[3], v = 800000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[4], y = min_point$C1C2[4], v = 1000000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[5], y = min_point$C1C2[5], v = 1400000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_vline(xintercept = ratio, linetype = "dashed", color = "grey")
-plot_bottom
-
-### Combine two plots
-ggarrange(plot_top + rremove("legend"), 
-          plot_bottom, 
-          plot_top_legend, nrow = 3, heights = c(5,5,0.5))
-dev.copy2pdf(file = "Fig2_unequal_1-2_20221202.pdf", useDingbats=FALSE,
-            width = 8, height = 7)
-
-#
-###
-
-
-######################################
-## Creating Figure 2 plot pop 2 10 times as large
-######################################
-
-### Check df
-twopop2.2 %>%
-  mutate(vtau = v*(1-tau),
-         vtot = V1 + V2) -> twopop2.2
-
-#save(twopop2.2, file = "unequalallocation_20200528.RData")
-#save(twopop2.2, file = "unequalallocation_pop1-1_pop2-2_20221116.RData")
-#save(twopop2.2, file = "unequalallocation_pop1-1_pop2-10_20221116.RData")
-
-### Load data
-#load("unequalallocation_20200528.RData")
-#load("unequalallocation_pop1-1_pop2-2_20221116.RData")
-load("unequalallocation_pop1-1_pop2-10_20221116.RData")
-
 N1 <- 1e6
 N2 <- 10e6
-v_list <- seq(0, 10e6, 2500)
+ratio <- N1/(N1+N2)
 
-### Subset data 
-twopop <- twopop2.2 %>% 
+unequal.sub <- unequal10 %>% 
   filter(time == max(time)) %>% 
   mutate(C1C2 = C1 + C2) %>%
-  select(C1C2, pv, v, C1, C2) # %>% 
-#  filter(phi1 == 0)
+  select(C1C2, pv, v, C1, C2) 
 
-data_top <- twopop %>%
-  filter(v < (N2*0.6)) %>%
+data_top <- unequal.sub %>%
+ filter(v < (N2*0.65)) %>%
   mutate(pop1_doses = pv * v) %>%
   mutate(pop2_doses = v - pop1_doses) %>%
   group_by(v) %>%
-  slice(which.min(C1C2))
+  slice(which.min(C1C2)) 
 
-data_bottom <- twopop %>%
-  filter(v %in% c(400000, 2000000, 3600000, 4300000, 5000000))
+data_bottom <- unequal.sub %>%
+  filter(v %in% c(400000,
+                  2000000,
+                  4400000,
+                  5100000,
+                  6000000)) 
 
-### Labs
-labs <- c("Regime 1\n(400000 doses)", "Regime 2\n(2000000 doses)", "Regime 3\n(3600000 doses)",
-          "Regime 4\n(4300000 doses)", "Regime 5\n(5000000 doses)")
-#names(labs) <- c("2100", "3500", "4160", "4500", "6000")
-names(labs) <- c(400000, 2000000, 3600000, 4300000, 5000000)
+### Labels for figure 
+labs <- c("Regime 1\n(400000 doses)", 
+          "Regime 2\n(2000000 doses)", 
+          "Regime 3\n(4400000 doses)",
+          "Regime 4\n(5100000 doses)", 
+          "Regime 5\n(6000000 doses)")
+
+names(labs) <- c(400000,
+                 2000000,
+                 4400000,
+                 5100000,
+                 6000000)
 labs
+
+
+############################
+## Plotting 
+############################
 
 ### Define my colors
 my_col <- c("#B2182B", "grey65", "#4393C3")
 
 ### Top half of Figure 2
-options(scipen = 99999)
 plot_top <- ggplot(data_top, mapping = aes(x = v)) +
   geom_line(aes(y = pop1_doses, color = "Population 1 (size 1,000,000)"), size = 1.3) +
   geom_line(aes(y = pop2_doses, color = "Population 2 (size 10,000,000)"), size = 1.3) +
-  geom_vline(xintercept= c(455000, 3252500, 4200000, 4412500), linetype="dotted", colour = "gray32") +
-   geom_text(x=150000, y=5000000, label="1", color="gray32", size = 4) +
-   geom_text(x=1800000, y=5000000, label="2", color="gray32", size = 4) +
-   geom_text(x=3750000, y=5000000, label="3", color="gray32", size = 4) +
-   geom_text(x=4300000, y=5000000, label="4", color="gray32", size = 4) +
-   geom_text(x=5100000, y=5000000, label="5", color="gray32", size = 4) +
-  labs(#title = "Remaking Keeling/Duijzer plot",
-    x = "Total number of vaccine doses",
+  geom_vline(xintercept= c(510000, 2965000, 5070000, 5257500), linetype="dotted", colour = "gray32") +
+  geom_text(x=255000, y=5700000, label="1", color="gray32", size = 4) +
+  geom_text(x=1737500, y=5700000, label="2", color="gray32", size = 4) +
+  geom_text(x=4017500, y=5700000, label="3", color="gray32", size = 4) +
+  geom_text(x=5163750, y=5700000, label="4", color="gray32", size = 4) +
+  geom_text(x=5878750, y=5700000, label="5", color="gray32", size = 4) +
+  labs(x = "Total number of vaccine doses",
     y = "Optimal vaccine allocation across \n populations 1 and 2") +
-  theme_bw() + 
-  theme(legend.title = element_blank(), 
+  theme_bw() +
+  theme(legend.title = element_blank(),
         legend.position = 'bottom',
-        #legend.spacing.x = unit(0.3, "cm"), 
-        # panel.grid.major = element_blank(), 
+        #legend.spacing.x = unit(0.3, "cm"),
+        # panel.grid.major = element_blank(),
         #  panel.grid.minor = element_blank(),
         # axis.text.x = element_blank(),
-        # axis.ticks.x = element_blank(), 
-        panel.grid.major = element_blank(), 
+        # axis.ticks.x = element_blank(),
+        panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.text.x = element_text(size = 10),
         axis.text.y = element_text(size = 10),
@@ -412,8 +287,8 @@ plot_top <- ggplot(data_top, mapping = aes(x = v)) +
   scale_y_continuous(breaks = seq(0, 10e6, 10e5), labels = seq(0, 10e6, 10e5)) +
   scale_x_continuous(breaks = seq(0, 10e6, 8e5), labels = seq(0, 10e6, 8e5)) +
   scale_color_manual(values = c("Population 1 (size 1,000,000)" = my_col[3], "Population 2 (size 10,000,000)" = my_col[1])) +
-  geom_text(x = 250000, y=43500, label="population 2", size = 3, color="#B2182B", angle = 31) +
-  geom_text(x = 220000, y=270000, label="population 1", size = 3, color="#4393C3")
+  geom_text(x = 1770000, y = 1250000, label="population 2", size = 3, color="#B2182B", angle = 23) +
+  geom_text(x = 1800000, y = 720000, label="population 1", size = 3, color="#4393C3")
 plot_top
 
 plot_top_legend <- get_legend(plot_top)
@@ -427,7 +302,6 @@ min_point <- as.data.frame(min_point)
 min_point
 
 ### Bottom half of Figure 2
-ratio <- N1/(N1+N2)
 plot_bottom <- ggplot(data = data_bottom, aes(x = pv, y = C1C2, color = pv)) +
   geom_line(size = 2) +
   facet_wrap(~v, ncol = 5, labeller = labeller(v = labs)) + 
@@ -446,17 +320,17 @@ plot_bottom <- ggplot(data = data_bottom, aes(x = pv, y = C1C2, color = pv)) +
   #geom_point(data = min_point, aes(x = pv[1], y = C1C2[1]), color = "black", inherit.aes=FALSE)
   geom_point(data = data.frame(x = min_point$pv[1], y = min_point$C1C2[1], v = 400000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
   geom_point(data = data.frame(x = min_point$pv[2], y = min_point$C1C2[2], v = 2000000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[3], y = min_point$C1C2[3], v = 3600000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[4], y = min_point$C1C2[4], v = 4300000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
-  geom_point(data = data.frame(x = min_point$pv[5], y = min_point$C1C2[5], v = 5000000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
+  geom_point(data = data.frame(x = min_point$pv[3], y = min_point$C1C2[3], v = 4400000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
+  geom_point(data = data.frame(x = min_point$pv[4], y = min_point$C1C2[4], v = 5100000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
+  geom_point(data = data.frame(x = min_point$pv[5], y = min_point$C1C2[5], v = 6000000), aes(x=x, y=y), inherit.aes=FALSE, size = 1.5) +
   geom_vline(xintercept = ratio, linetype = "dashed", color = "grey")
 plot_bottom
 
-### Combine two plots
 ggarrange(plot_top + rremove("legend"), 
           plot_bottom, 
           plot_top_legend, nrow = 3, heights = c(5,5,0.5))
-dev.copy2pdf(file = "Fig2_unequal_1-10_20221202.pdf", useDingbats=FALSE,
+
+dev.copy2pdf(file = "prophylactic_scenarios/figures/FigureS2.pdf", useDingbats=FALSE,
              width = 8, height = 7)
 
 #
